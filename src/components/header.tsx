@@ -1,0 +1,84 @@
+import { Button } from "@chakra-ui/react";
+import { useRouter } from "next/router";
+
+export default function Header(): JSX.Element {
+  const router = useRouter();
+
+  const variantAndClassNameProps = (
+    name: string
+  ): {
+    variant: string;
+    className: string;
+    color: string;
+    borderColor: string;
+    size: string;
+  } => {
+    const pathname = router.pathname;
+    const baseClassName = "mr-4";
+    if (pathname.endsWith(name)) {
+      return {
+        variant: "solid",
+        className: baseClassName,
+        color: "",
+        borderColor: "",
+        size: "sm",
+      };
+    } else {
+      return {
+        variant: "outline",
+        className: baseClassName + " buttonNonActiveColor",
+        color: "buttonNonActiveColor",
+        borderColor: "buttonNonActiveColor",
+        size: "sm",
+      };
+    }
+  };
+
+  const hoverEffect = (
+    name: string
+  ): { color: string; borderColor: string } => {
+    if (router.pathname?.endsWith(name)) {
+      return { color: "", borderColor: "" };
+    } else {
+      return { color: "#FFFFFF", borderColor: "#FFFFFF" };
+    }
+  };
+
+  return (
+    <div className="px-8 py-2 bg-header-color">
+      <div className="flex justify-between">
+        <h2 className="text-white font-bold text-2xl mr-4">SNS App</h2>
+        <div>
+          <Button
+            _hover={hoverEffect("/daichi")}
+            {...variantAndClassNameProps("daichi")}
+            onClick={async () => await router.push("/daichi")}
+          >
+            daichi
+          </Button>
+          <Button
+            _hover={hoverEffect("/kaichi")}
+            {...variantAndClassNameProps("kaichi")}
+            onClick={async () => await router.push("kaichi")}
+          >
+            kaichi
+          </Button>
+          <Button
+            _hover={hoverEffect("/morishun")}
+            {...variantAndClassNameProps("morishun")}
+            onClick={async () => await router.push("morishun")}
+          >
+            morishun
+          </Button>
+          <Button
+            _hover={hoverEffect("/naoya")}
+            {...variantAndClassNameProps("naoya")}
+            onClick={async () => await router.push("naoya")}
+          >
+            naoya
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}

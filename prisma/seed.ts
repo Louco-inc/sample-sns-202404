@@ -46,6 +46,38 @@ async function main(): Promise<void> {
         })
     )
   );
+
+  console.log("投稿のインサート")
+  const mockPosts = [
+    {
+      content:
+        "テキストテキストテキストテキストテキストテキストテキストテキストテキストテキストテキストテキストテキストテキストテキストテキスト",
+    },
+    {
+      content: "テキストテキストテキストテキスト",
+    },
+    {
+      content:
+        "テキストテキストテキストテキストテキストテキストテキストテキストテキストテキストテキストテキストテキストテキストテキストテキスト",
+    },
+  ];
+  Promise.all(
+    mockPosts.map(
+      async (post) =>
+        await prisma.post.create({
+          data: {
+            content: post.content,
+            userId: 1,
+            comments: {
+              create: [],
+            },
+            favorites: {
+              create: [],
+            },
+          },
+        })
+    )
+  );
 }
 
 main()

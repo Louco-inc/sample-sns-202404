@@ -18,6 +18,7 @@ const config: Config = {
         "header-color": "#00B267",
         "primary-button-color": "#F1E500",
         "error-message-color": "#FF3F3F",
+        "account-name-color": "#B9B9B9",
       },
     },
   },

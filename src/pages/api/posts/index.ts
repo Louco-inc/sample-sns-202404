@@ -7,14 +7,17 @@ export default async function handler(
   res: NextApiResponse
 ): Promise<void> {
   if (req.method === "GET") {
-    const player = await db.post.findMany({
+    const posts = await db.post.findMany({
       orderBy: {
         createdAt: "desc",
       },
+      include: {
+        user: true,
+				comments: true,
+				favorites: true,
+      },
     });
-    const response =
-      player.length > 0 ? player[0] : { uuid: "", point: 0, nickname: "" };
-    res.status(200).json(response);
+    res.status(200).json(posts);
   } else if (req.method === "POST") {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     const body = JSON.parse(req.body);

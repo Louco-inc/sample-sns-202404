@@ -1,9 +1,13 @@
 import { loginAuth } from "@/lib/loginAuth";
-import { AlertType } from "@/types";
+import { AlertType, User } from "@/types";
 import { Button, FormControl, FormLabel, Input, Box } from "@chakra-ui/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import AlertComponent from "@/components/AlertComponent";
 import { useRouter } from "next/router";
+import {
+  getUUIDFromSessionStorage,
+  saveUUIDToSessionStorage,
+} from "@/lib/SessionStorage";
 
 const alertDefaultValue = {
   title: "",
@@ -18,6 +22,34 @@ export default function LoginPage(): JSX.Element {
   const [alertProps, setAlertProps] = useState<AlertType>(alertDefaultValue);
   const router = useRouter();
 
+  useEffect(() => {
+    const init = async (): Promise<void> => {
+      // すでにuuidがセッションに保持されており、正しいのであればトップ画面に遷移
+      // なければそのまま
+      const uuid = await fetchUserByUuid();
+      console.log(uuid);
+      if (uuid) {
+        router.push("/");
+      }
+    };
+    init();
+  }, []);
+
+  const fetchUserByUuid = async (): Promise<string> => {
+    const uuid = getUUIDFromSessionStorage();
+    if (uuid) {
+      const user = await fetch(`/api/users/uuid/?uuid=${uuid}`)
+        .then(async (r) => await r.json())
+        .catch((e) => {
+          console.log(e);
+          return "";
+        });
+      return user?.uuid ?? "";
+    } else {
+      return "";
+    }
+  };
+
   const login = async (): Promise<void> => {
     if (!email || !password) {
       return;
@@ -25,7 +57,7 @@ export default function LoginPage(): JSX.Element {
     const uuid: string = await loginAuth(email, password);
     if (uuid) {
       // セッションストレージにuuidを保存
-      console.log({ uuid });
+      saveUUIDToSessionStorage(uuid);
       router.push("/");
     } else {
       setAlertProps({

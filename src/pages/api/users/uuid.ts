@@ -6,12 +6,12 @@ export default async function handler(
   res: NextApiResponse
 ): Promise<void> {
   if (req.method === "GET") {
-    const id = req.query.id;
-    const user = await db.user.findUnique({
+    const uuid = req.query.uuid;
+    const user = await db.user.findMany({
       where: {
-        id: Number(id),
+        uuid,
       },
     });
-    res.status(200).json(user);
+    res.status(200).json(user[0]);
   }
 }

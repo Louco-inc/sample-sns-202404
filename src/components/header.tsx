@@ -47,7 +47,7 @@ export default function Header(): JSX.Element {
   return (
     <div className="px-8 py-2 bg-header-color">
       <div className="flex justify-between">
-        <h2 className="text-white font-bold text-2xl mr-4">SNS App</h2>
+        <h2 className="text-white font-bold text-2xl mr-4">MonthlyApp_now</h2>
         <div>
           <Button
             _hover={hoverEffect("/daichi")}

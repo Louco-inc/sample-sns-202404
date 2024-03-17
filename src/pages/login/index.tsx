@@ -8,6 +8,8 @@ import {
   getUUIDFromSessionStorage,
   saveUUIDToSessionStorage,
 } from "@/lib/SessionStorage";
+import { userInfoSelector } from "@/state/userState";
+import { useSetRecoilState } from "recoil";
 
 const alertDefaultValue = {
   title: "",
@@ -20,33 +22,34 @@ export default function LoginPage(): JSX.Element {
   const [password, setPassword] = useState<string>("");
   const [isError, setIsError] = useState<boolean>(false);
   const [alertProps, setAlertProps] = useState<AlertType>(alertDefaultValue);
+  const setUserInfo = useSetRecoilState(userInfoSelector);
   const router = useRouter();
 
   useEffect(() => {
     const init = async (): Promise<void> => {
       // すでにuuidがセッションに保持されており、正しいのであればトップ画面に遷移
       // なければそのまま
-      const uuid = await fetchUserByUuid();
-      console.log(uuid);
-      if (uuid) {
+      const user = await fetchUserByUuid();
+      if (user) {
+        setUserInfo(user);
         router.push("/");
       }
     };
     init();
   }, []);
 
-  const fetchUserByUuid = async (): Promise<string> => {
+  const fetchUserByUuid = async (): Promise<User | undefined> => {
     const uuid = getUUIDFromSessionStorage();
     if (uuid) {
-      const user = await fetch(`/api/users/uuid/?uuid=${uuid}`)
+      const user: User = await fetch(`/api/users/uuid/?uuid=${uuid}`)
         .then(async (r) => await r.json())
         .catch((e) => {
           console.log(e);
-          return "";
+          return undefined;
         });
-      return user?.uuid ?? "";
+      return user;
     } else {
-      return "";
+      return undefined;
     }
   };
 
@@ -54,10 +57,12 @@ export default function LoginPage(): JSX.Element {
     if (!email || !password) {
       return;
     }
-    const uuid: string = await loginAuth(email, password);
-    if (uuid) {
+    const user: User | undefined = await loginAuth(email, password);
+    if (user) {
       // セッションストレージにuuidを保存
-      saveUUIDToSessionStorage(uuid);
+      saveUUIDToSessionStorage(user.uuid);
+      // ステートにログインユーザーを保存
+      setUserInfo(user);
       router.push("/");
     } else {
       setAlertProps({

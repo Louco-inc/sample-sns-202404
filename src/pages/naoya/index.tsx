@@ -8,19 +8,24 @@ import {
   Text,
 } from "@chakra-ui/react";
 import { FcTimeline } from "react-icons/fc";
-import { FaSearch, FaRegBookmark } from "react-icons/fa";
+import {
+  FaSearch,
+  FaRegBookmark,
+  FaRegComment,
+  FaRegHeart,
+} from "react-icons/fa";
 import { MdNotificationsNone, MdMailOutline } from "react-icons/md";
 import { Post } from "@/types";
 import { useEffect, useState } from "react";
-import { FaRegComment } from "react-icons/fa";
-import { FaRegHeart } from "react-icons/fa";
 import Image from "next/image";
 import { userInfoSelector } from "@/state/userState";
 import { useRecoilValue } from "recoil";
 import dynamic from "next/dynamic";
+import PostForm from "@/components/PostForm";
 
 const TimelinePage = (): JSX.Element => {
   const [timelineData, setTimelineData] = useState<Post[]>([]);
+  const [isOpenPostForm, setIsOpenPostForm] = useState<boolean>(false);
   const userInfo = useRecoilValue(userInfoSelector);
 
   useEffect(() => {
@@ -37,13 +42,30 @@ const TimelinePage = (): JSX.Element => {
     return `@${email.split("@")[0]}`;
   };
 
-  const openPostModal = (): void => {};
+  const openPostModal = (): void => {
+    setIsOpenPostForm(true);
+  };
+
+  const postForm = async (content: string): Promise<void> => {
+    const params = {
+      content,
+      userId: userInfo.id,
+    };
+    const res: Post = await fetch("/api/posts", {
+      method: "POST",
+      body: JSON.stringify(params),
+    })
+      .then(async (r) => await r.json())
+      .catch((r) => console.log(r));
+    setTimelineData((prev) => [res, ...prev]);
+    setIsOpenPostForm(false);
+  };
 
   return (
     <div>
       <Header />
-      <div className="flex bg-main-color">
-        <div className="w-1/4">
+      <div className="flex justify-center bg-main-color">
+        <div className="w-1/6">
           <div className="flex flex-col h-[calc(100vh-108px)] px-8">
             <div className="flex justify-center my-4">
               <Image
@@ -80,7 +102,11 @@ const TimelinePage = (): JSX.Element => {
             >
               <Text fontSize="lg">ブックマーク</Text>
             </Button>
-            <Button className="!bg-post-color mt-8" variant="solid" onClick={openPostModal}>
+            <Button
+              className="!bg-post-color !text-white mt-8"
+              variant="solid"
+              onClick={openPostModal}
+            >
               投稿する
             </Button>
           </div>
@@ -100,7 +126,7 @@ const TimelinePage = (): JSX.Element => {
             </div>
           </div>
         </div>
-        <div className="w-3/4">
+        <div className="w-3/6">
           {timelineData.map((post) => {
             return (
               <div key={post.id} className="flex p-4 rounded-2xl">
@@ -140,6 +166,11 @@ const TimelinePage = (): JSX.Element => {
           })}
         </div>
       </div>
+      <PostForm
+        isOpenModal={isOpenPostForm}
+        onClose={() => setIsOpenPostForm(false)}
+        postForm={async (content) => await postForm(content)}
+      />
     </div>
   );
 };

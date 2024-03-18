@@ -1,6 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { db } from "../../../lib/prisma";
-import { v4 as uuidv4 } from "uuid";
 
 export default async function handler(
   req: NextApiRequest,
@@ -13,25 +12,34 @@ export default async function handler(
       },
       include: {
         user: true,
-				comments: true,
-				favorites: true,
+        comments: true,
+        favorites: true,
       },
     });
     res.status(200).json(posts);
   } else if (req.method === "POST") {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     const body = JSON.parse(req.body);
-    const { nickname } = body;
-    const player = await db.post.create({
+    const { content, userId } = body;
+    const post = await db.post.create({
       data: {
-        nickname,
-        point: 1000,
-        uuid: uuidv4(),
-        histories: {
+        content,
+        user: {
+          connect: { id: userId },
+        },
+        comments: {
+          create: [],
+        },
+        favorites: {
           create: [],
         },
       },
+      include: {
+        user: true,
+        comments: true,
+        favorites: true,
+      },
     });
-    res.status(200).json(player);
+    res.status(200).json(post);
   }
 }

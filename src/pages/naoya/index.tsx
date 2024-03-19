@@ -68,6 +68,61 @@ const TimelinePage = (): JSX.Element => {
       .catch((e) => console.log(e));
   };
 
+  const onCreatedFavorite = async (post: Post): Promise<void> => {
+    const params = {
+      postId: post.id,
+      userId: userInfo.id,
+    };
+    await fetch("/api/favorites", {
+      method: "POST",
+      body: JSON.stringify(params),
+    })
+      .then(async (r) => {
+        const createdFavorite = await r.json();
+        setTimelineData((prev) =>
+          prev.map((post) => {
+            if (post.id === createdFavorite.postId) {
+              return {
+                ...post,
+                favorites: [...post.favorites, createdFavorite],
+              };
+            } else {
+              return post;
+            }
+          })
+        );
+      })
+      .catch((e) => console.log(e));
+  };
+
+  const onDeleteFavorite = async (targetPost: Post): Promise<void> => {
+    const params = {
+      postId: targetPost.id,
+      userId: userInfo.id,
+    };
+    await fetch("/api/favorites", {
+      method: "DELETE",
+      body: JSON.stringify(params),
+    })
+      .then(async () => {
+        setTimelineData((prev) =>
+          prev.map((post) => {
+            if (post.id === targetPost.id) {
+              return {
+                ...post,
+                favorites: post.favorites.filter(
+                  (p) => p.postId !== Number(post.id)
+                ),
+              };
+            } else {
+              return post;
+            }
+          })
+        );
+      })
+      .catch((e) => console.log(e));
+  };
+
   return (
     <div>
       <Header />
@@ -133,13 +188,15 @@ const TimelinePage = (): JSX.Element => {
             </div>
           </div>
         </div>
-        <div className="w-3/6 overflow-auto">
+        <div className="w-3/6 overflow-y-auto">
           {timelineData.map((post) => {
             return (
               <PostBlock
                 post={post}
                 key={post.id}
                 onDelete={async () => await postDelete(post)}
+                onCreateFavorite={async () => await onCreatedFavorite(post)}
+                onDeleteFavorite={async () => await onDeleteFavorite(post)}
               />
             );
           })}

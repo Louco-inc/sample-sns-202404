@@ -14,23 +14,48 @@ import {
   useDisclosure,
 } from "@chakra-ui/react";
 import { BsThreeDots } from "react-icons/bs";
-import { FaRegComment, FaRegHeart, FaRegBookmark } from "react-icons/fa";
+import {
+  FaRegComment,
+  FaRegHeart,
+  FaRegBookmark,
+  FaHeart,
+} from "react-icons/fa";
 import PostMenu from "./PostMenu";
 import Image from "next/image";
 import { Post } from "@/types";
 import { formattedAccountName, formattedPostTime } from "@/utils";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useRecoilValue } from "recoil";
+import { userInfoSelector } from "@/state/userState";
 
 type Props = {
   post: Post;
   onDelete: () => void;
+  onCreateFavorite: () => void;
+  onDeleteFavorite: () => void;
 };
 
 const PostBlock = (props: Props): JSX.Element => {
-  const { post, onDelete } = props;
+  const { post, onDelete, onCreateFavorite, onDeleteFavorite } = props;
   const [isOpenPostMenu, setIsOpenPostMenu] = useState<boolean>(false);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const cancelRef = useRef<HTMLButtonElement>(null);
+  const userInfo = useRecoilValue(userInfoSelector);
+  const [isFavorite, setIsFavorite] = useState<boolean>(
+    post.favorites.some((f) => f.userId === Number(userInfo.id))
+  );
+
+  const handleFavorite = (): void => {
+    if (isFavorite) {
+      onDeleteFavorite();
+    } else {
+      onCreateFavorite();
+    }
+  };
+
+  useEffect(() => {
+    setIsFavorite(post.favorites.some((f) => f.userId === Number(userInfo.id)));
+  }, [post.favorites]);
 
   return (
     <div key={post.id} className="flex p-4 rounded-2xl">
@@ -66,7 +91,11 @@ const PostBlock = (props: Props): JSX.Element => {
           <Button leftIcon={<FaRegComment />} variant="ghost">
             {post.comments.length}
           </Button>
-          <Button leftIcon={<FaRegHeart />} variant="ghost">
+          <Button
+            leftIcon={isFavorite ? <FaHeart /> : <FaRegHeart />}
+            variant="ghost"
+            onClick={handleFavorite}
+          >
             {post.favorites.length}
           </Button>
           <Button leftIcon={<FaRegBookmark />} variant="ghost">

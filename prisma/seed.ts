@@ -24,30 +24,28 @@ async function main(): Promise<void> {
       uuid: "03b20311-6270-4906-b20b-f81d180c2a6b",
     },
   ];
-  const createdUsers = Promise.all(
-    mockUsers.map(
-      async (user) =>
-        await prisma.user.create({
-          data: {
-            nickname: user.nickname,
-            password: user.password,
-            email: user.email,
-            uuid: user.uuid,
-            posts: {
-              create: [],
-            },
-            comments: {
-              create: [],
-            },
-            favorites: {
-              create: [],
-            },
+  mockUsers.map(
+    async (user) =>
+      await prisma.user.create({
+        data: {
+          nickname: user.nickname,
+          password: user.password,
+          email: user.email,
+          uuid: user.uuid,
+          posts: {
+            create: [],
           },
-        })
-    )
+          comments: {
+            create: [],
+          },
+          favorites: {
+            create: [],
+          },
+        },
+      })
   );
 
-  console.log("投稿のインサート")
+  console.log("投稿のインサート");
   const mockPosts = [
     {
       content:

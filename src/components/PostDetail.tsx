@@ -4,6 +4,8 @@ import { FaChevronLeft } from "react-icons/fa";
 import { Button, Text, Textarea } from "@chakra-ui/react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { userInfoSelector } from "@/state/userState";
+import { useRecoilValue } from "recoil";
 
 type Props = {
   post: Post;
@@ -28,6 +30,7 @@ const PostDetail = (props: Props): JSX.Element => {
   const [contentValue, setContentValue] = useState<string>("");
   const [comments, setComments] = useState<Comment[]>([]);
   const [isLoaded, setIsLoaded] = useState<boolean>(false);
+  const userInfo = useRecoilValue(userInfoSelector);
 
   useEffect(() => {
     if (isLoaded) {
@@ -59,11 +62,58 @@ const PostDetail = (props: Props): JSX.Element => {
   }, []);
 
   const createCommentFavorite = async (comment: Comment): Promise<void> => {
-    // commentテーブルにfavoritesカラムを追加する
+    const params = {
+      userId: comment.userId,
+      commentId: comment.id,
+    };
+    await fetch("/api/commentFavorites", {
+      method: "POST",
+      body: JSON.stringify(params),
+    })
+      .then(async (r) => {
+        const newCommentFavorite = await r.json();
+        setComments((prev) =>
+          prev.map((c) => {
+            if (c.id === comment.id) {
+              return {
+                ...c,
+                favorites: [newCommentFavorite, ...c.favorites],
+              };
+            } else {
+              return c;
+            }
+          })
+        );
+      })
+      .catch((e) => console.log(e));
   };
 
   const deleteCommentFavorite = async (comment: Comment): Promise<void> => {
-    // commentテーブルにfavoritesカラムを追加する
+    const params = {
+      userId: userInfo.id,
+      comment: comment.id,
+    };
+    await fetch(`/api/commentFavorites`, {
+      method: "DELETE",
+      body: JSON.stringify(params),
+    })
+      .then(() => {
+        setComments((prev) =>
+          prev.map((c) => {
+            if (comment.id === c.id) {
+              return {
+                ...c,
+                favorites: c.favorites.filter(
+                  (f) => f.commentId !== Number(comment.id)
+                ),
+              };
+            } else {
+              return c;
+            }
+          })
+        );
+      })
+      .catch((e) => console.log(e));
   };
 
   const handleCreateComment = (): void => {
@@ -86,6 +136,7 @@ const PostDetail = (props: Props): JSX.Element => {
       <PostBlock
         post={post}
         key={post.id}
+        isComment={false}
         onDelete={async () => onDelete(post)}
         onCreateFavorite={async () => onCreateFavorite(post)}
         onDeleteFavorite={async () => onDeleteFavorite(post)}
@@ -119,7 +170,7 @@ const PostDetail = (props: Props): JSX.Element => {
           return (
             <PostBlock
               post={comment}
-							isComment={true}
+              isComment={true}
               key={comment.id}
               onDelete={async () => deleteComment(comment)}
               onCreateFavorite={async () =>

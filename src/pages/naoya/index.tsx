@@ -281,6 +281,7 @@ const TimelinePage = (): JSX.Element => {
                 <PostBlock
                   post={post}
                   key={post.id}
+									isComment={false}
                   onDelete={async () => await postDelete(post)}
                   onCreateFavorite={async () => await onCreatedFavorite(post)}
                   onDeleteFavorite={async () => await onDeleteFavorite(post)}

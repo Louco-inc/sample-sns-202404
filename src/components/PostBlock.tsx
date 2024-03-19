@@ -22,14 +22,14 @@ import {
 } from "react-icons/fa";
 import PostMenu from "./PostMenu";
 import Image from "next/image";
-import { Post } from "@/types";
+import { Post, Comment } from "@/types";
 import { formattedAccountName, formattedPostTime } from "@/utils";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, MouseEvent } from "react";
 import { useRecoilValue } from "recoil";
 import { userInfoSelector } from "@/state/userState";
 
 type Props = {
-  post: Post;
+  post: Post | Comment;
   isComment: boolean;
   onDelete: () => void;
   onCreateFavorite: () => void;
@@ -57,7 +57,10 @@ const PostBlock = (props: Props): JSX.Element => {
   const isOpenPostDetail = Boolean(openPostDetail);
   const hoverClass = `${isOpenPostDetail ? "hover:cursor-pointer" : ""}`;
 
-  const handleFavorite = (): void => {
+  const handleFavorite = (
+    e: MouseEvent<HTMLButtonElement, globalThis.MouseEvent>
+  ): void => {
+    e.stopPropagation();
     if (isFavorite) {
       onDeleteFavorite();
     } else {
@@ -89,7 +92,10 @@ const PostBlock = (props: Props): JSX.Element => {
           </div>
           <div
             className="last:ml-auto hover:cursor-pointer"
-            onClick={() => setIsOpenPostMenu(true)}
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsOpenPostMenu(true);
+            }}
           >
             <Icon as={BsThreeDots} w={8} h={8} />
             <div className="absolute">
@@ -109,7 +115,9 @@ const PostBlock = (props: Props): JSX.Element => {
           <Button
             leftIcon={isFavorite ? <FaHeart /> : <FaRegHeart />}
             variant="ghost"
-            onClick={handleFavorite}
+            onClick={(
+              e: MouseEvent<HTMLButtonElement, globalThis.MouseEvent>
+            ) => handleFavorite(e)}
           >
             {post.favorites.length}
           </Button>

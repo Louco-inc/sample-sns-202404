@@ -28,7 +28,7 @@ export type Comment = {
   user: User;
   postId: number;
   post: Post;
-  favorites: Favorite[];
+  favorites: CommentFavorite[];
 };
 
 export type Favorite = {
@@ -40,6 +40,16 @@ export type Favorite = {
   postId: number;
   post: Post;
 };
+
+export type CommentFavorite = {
+  id: number;
+  createdAt: Date;
+  updatedAt: Date;
+  userId: number;
+  user: User;
+  commentId: number;
+  comment: Comment;
+}
 
 export type AlertType = {
   title: string;

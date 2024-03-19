@@ -1,5 +1,5 @@
 export type User = {
-  id: string;
+  id: number;
   createdAt: Date;
   updatedAt: Date;
   nickname: string;
@@ -9,7 +9,7 @@ export type User = {
 };
 
 export type Post = {
-  id: string;
+  id: number;
   createdAt: Date;
   updatedAt: Date;
   content: string;
@@ -20,7 +20,7 @@ export type Post = {
 };
 
 export type Comment = {
-  id: string;
+  id: number;
   createdAt: Date;
   updatedAt: Date;
   content: string;
@@ -28,10 +28,11 @@ export type Comment = {
   user: User;
   postId: number;
   post: Post;
+  favorites: Favorite[];
 };
 
 export type Favorite = {
-  id: string;
+  id: number;
   createdAt: Date;
   updatedAt: Date;
   userId: number;

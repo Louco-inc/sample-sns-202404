@@ -30,20 +30,32 @@ import { userInfoSelector } from "@/state/userState";
 
 type Props = {
   post: Post;
+  isComment: boolean;
   onDelete: () => void;
   onCreateFavorite: () => void;
   onDeleteFavorite: () => void;
+  openPostDetail?: () => void;
 };
 
 const PostBlock = (props: Props): JSX.Element => {
-  const { post, onDelete, onCreateFavorite, onDeleteFavorite } = props;
+  const {
+    post,
+    isComment,
+    onDelete,
+    onCreateFavorite,
+    onDeleteFavorite,
+    openPostDetail,
+  } = props;
   const [isOpenPostMenu, setIsOpenPostMenu] = useState<boolean>(false);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const cancelRef = useRef<HTMLButtonElement>(null);
   const userInfo = useRecoilValue(userInfoSelector);
+  if (!post) return <></>;
   const [isFavorite, setIsFavorite] = useState<boolean>(
     post.favorites.some((f) => f.userId === Number(userInfo.id))
   );
+  const isOpenPostDetail = Boolean(openPostDetail);
+  const hoverClass = `${isOpenPostDetail ? "hover:cursor-pointer" : ""}`;
 
   const handleFavorite = (): void => {
     if (isFavorite) {
@@ -59,7 +71,7 @@ const PostBlock = (props: Props): JSX.Element => {
 
   return (
     <div key={post.id} className="flex p-4 rounded-2xl">
-      <Card className="w-full">
+      <Card className={`w-full ${hoverClass}`} onClick={openPostDetail}>
         <CardHeader className="flex items-center">
           <Image
             className="my-1 mr-2"
@@ -75,7 +87,10 @@ const PostBlock = (props: Props): JSX.Element => {
           <div className="text-xs text-account-name-color ml-4">
             {formattedPostTime(post.updatedAt)}
           </div>
-          <div className="last:ml-auto" onClick={() => setIsOpenPostMenu(true)}>
+          <div
+            className="last:ml-auto hover:cursor-pointer"
+            onClick={() => setIsOpenPostMenu(true)}
+          >
             <Icon as={BsThreeDots} w={8} h={8} />
             <div className="absolute">
               <PostMenu
@@ -89,7 +104,7 @@ const PostBlock = (props: Props): JSX.Element => {
         <CardBody className="ml-10 !px-5 !py-0">{post.content}</CardBody>
         <CardFooter className="ml-6">
           <Button leftIcon={<FaRegComment />} variant="ghost">
-            {post.comments.length}
+            {isComment ? 0 : post.comments.length}
           </Button>
           <Button
             leftIcon={isFavorite ? <FaHeart /> : <FaRegHeart />}
@@ -115,7 +130,7 @@ const PostBlock = (props: Props): JSX.Element => {
             </AlertDialogHeader>
 
             <AlertDialogBody>
-              投稿を削除してもよろしいでしょうか。
+              {`${isComment ? "コメント" : "投稿"}を削除してもよろしいでしょうか。`}
             </AlertDialogBody>
 
             <AlertDialogFooter>

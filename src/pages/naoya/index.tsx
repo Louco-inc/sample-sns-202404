@@ -3,7 +3,7 @@ import { Button, Text, useToast } from "@chakra-ui/react";
 import { FcTimeline } from "react-icons/fc";
 import { FaSearch, FaRegBookmark } from "react-icons/fa";
 import { MdNotificationsNone, MdMailOutline } from "react-icons/md";
-import { Post } from "@/types";
+import { Post, Comment } from "@/types";
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { userInfoSelector } from "@/state/userState";
@@ -12,10 +12,12 @@ import dynamic from "next/dynamic";
 import PostForm from "@/components/PostForm";
 import { formattedAccountName } from "@/utils";
 import PostBlock from "@/components/PostBlock";
+import PostDetail from "@/components/PostDetail";
 
 const TimelinePage = (): JSX.Element => {
   const [timelineData, setTimelineData] = useState<Post[]>([]);
   const [isOpenPostForm, setIsOpenPostForm] = useState<boolean>(false);
+  const [postDetail, setPostDetail] = useState<Post | undefined>(undefined);
   const userInfo = useRecoilValue(userInfoSelector);
   const toast = useToast();
 
@@ -123,6 +125,76 @@ const TimelinePage = (): JSX.Element => {
       .catch((e) => console.log(e));
   };
 
+  const createComment = async (value: string): Promise<void> => {
+    if (!postDetail) return;
+    const params = {
+      userId: userInfo.id,
+      postId: postDetail.id,
+      content: value,
+    };
+    await fetch("/api/comments", {
+      method: "POST",
+      body: JSON.stringify(params),
+    })
+      .then(async (r) => {
+        const newComment = await r.json();
+        setTimelineData((prev) =>
+          prev.map((post) => {
+            if (post.id === postDetail.id) {
+              return {
+                ...post,
+                comments: [newComment, ...post.comments],
+              };
+            } else {
+              return post;
+            }
+          })
+        );
+        setPostDetail((prev) => {
+          if (prev) {
+            return {
+              ...prev,
+              comments: [newComment, ...prev.comments],
+            };
+          } else {
+            return undefined;
+          }
+        });
+      })
+      .catch((e) => console.log(e));
+  };
+
+  const deleteComment = async (comment: Comment): Promise<void> => {
+    await fetch(`/api/comments/${comment.id}`, {
+      method: "DELETE",
+    })
+      .then(() => {
+        setTimelineData((prev) =>
+          prev.map((post) => {
+            if (post.id === comment.postId) {
+              return {
+                ...post,
+                comments: post.comments.filter((pc) => pc.id !== comment.id),
+              };
+            } else {
+              return post;
+            }
+          })
+        );
+        setPostDetail((prev) => {
+          if (prev) {
+            return {
+              ...prev,
+              comments: prev.comments.filter((pc) => pc.id !== comment.id),
+            };
+          } else {
+            return undefined;
+          }
+        });
+      })
+      .catch((e) => console.log(e));
+  };
+
   return (
     <div>
       <Header />
@@ -189,17 +261,34 @@ const TimelinePage = (): JSX.Element => {
           </div>
         </div>
         <div className="w-3/6 overflow-y-auto">
-          {timelineData.map((post) => {
-            return (
-              <PostBlock
-                post={post}
-                key={post.id}
-                onDelete={async () => await postDelete(post)}
-                onCreateFavorite={async () => await onCreatedFavorite(post)}
-                onDeleteFavorite={async () => await onDeleteFavorite(post)}
-              />
-            );
-          })}
+          {postDetail ? (
+            <PostDetail
+              post={postDetail}
+              onDelete={async () => await postDelete(postDetail)}
+              onCreateFavorite={async () => await onCreatedFavorite(postDetail)}
+              onDeleteFavorite={async () => await onDeleteFavorite(postDetail)}
+              goBackTimeline={() => setPostDetail(undefined)}
+              createComment={async (value: string) =>
+                await createComment(value)
+              }
+              deleteComment={async (comment: Comment) =>
+                await deleteComment(comment)
+              }
+            />
+          ) : (
+            timelineData.map((post) => {
+              return (
+                <PostBlock
+                  post={post}
+                  key={post.id}
+                  onDelete={async () => await postDelete(post)}
+                  onCreateFavorite={async () => await onCreatedFavorite(post)}
+                  onDeleteFavorite={async () => await onDeleteFavorite(post)}
+                  openPostDetail={() => setPostDetail(post)}
+                />
+              );
+            })
+          )}
         </div>
       </div>
       <PostForm

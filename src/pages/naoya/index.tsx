@@ -70,7 +70,7 @@ const TimelinePage = (): JSX.Element => {
       .catch((e) => console.log(e));
   };
 
-  const onCreatedFavorite = async (post: Post): Promise<void> => {
+  const createdFavorite = async (post: Post): Promise<void> => {
     const params = {
       postId: post.id,
       userId: userInfo.id,
@@ -80,13 +80,13 @@ const TimelinePage = (): JSX.Element => {
       body: JSON.stringify(params),
     })
       .then(async (r) => {
-        const createdFavorite = await r.json();
+        const createdFavoriteValue = await r.json();
         setTimelineData((prev) =>
           prev.map((post) => {
-            if (post.id === createdFavorite.postId) {
+            if (post.id === createdFavoriteValue.postId) {
               return {
                 ...post,
-                favorites: [...post.favorites, createdFavorite],
+                favorites: [...post.favorites, createdFavoriteValue],
               };
             } else {
               return post;
@@ -97,7 +97,7 @@ const TimelinePage = (): JSX.Element => {
       .catch((e) => console.log(e));
   };
 
-  const onDeleteFavorite = async (targetPost: Post): Promise<void> => {
+  const deleteFavorite = async (targetPost: Post): Promise<void> => {
     const params = {
       postId: targetPost.id,
       userId: userInfo.id,
@@ -265,8 +265,8 @@ const TimelinePage = (): JSX.Element => {
             <PostDetail
               post={postDetail}
               onDelete={async () => await postDelete(postDetail)}
-              onCreateFavorite={async () => await onCreatedFavorite(postDetail)}
-              onDeleteFavorite={async () => await onDeleteFavorite(postDetail)}
+              onCreateFavorite={async () => await createdFavorite(postDetail)}
+              onDeleteFavorite={async () => await deleteFavorite(postDetail)}
               goBackTimeline={() => setPostDetail(undefined)}
               createComment={async (value: string) =>
                 await createComment(value)
@@ -283,8 +283,8 @@ const TimelinePage = (): JSX.Element => {
                   key={post.id}
                   isComment={false}
                   onDelete={async () => await postDelete(post)}
-                  onCreateFavorite={async () => await onCreatedFavorite(post)}
-                  onDeleteFavorite={async () => await onDeleteFavorite(post)}
+                  onCreateFavorite={async () => await createdFavorite(post)}
+                  onDeleteFavorite={async () => await deleteFavorite(post)}
                   openPostDetail={() => setPostDetail(post)}
                 />
               );

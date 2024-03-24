@@ -32,6 +32,7 @@ const PostDetail = (props: Props): JSX.Element => {
   const [isLoaded, setIsLoaded] = useState<boolean>(false);
   const userInfo = useRecoilValue(userInfoSelector);
 
+  // コメントの更新
   useEffect(() => {
     if (isLoaded) {
       if (comments < post.comments) {
@@ -137,9 +138,9 @@ const PostDetail = (props: Props): JSX.Element => {
         post={post}
         key={post.id}
         isComment={false}
-        onDelete={async () => onDelete(post)}
-        onCreateFavorite={async () => onCreateFavorite(post)}
-        onDeleteFavorite={async () => onDeleteFavorite(post)}
+        onDelete={async () => onDelete()}
+        onCreateFavorite={async () => onCreateFavorite()}
+        onDeleteFavorite={async () => onDeleteFavorite()}
       />
       <div className="flex mt-8 bg-white m-4 p-4 rounded-2xl">
         <div className="mr-2">

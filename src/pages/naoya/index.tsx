@@ -3,7 +3,7 @@ import { Button, Text, useToast } from "@chakra-ui/react";
 import { FcTimeline } from "react-icons/fc";
 import { FaSearch, FaRegBookmark } from "react-icons/fa";
 import { MdNotificationsNone, MdMailOutline } from "react-icons/md";
-import { Post, Comment } from "@/types";
+import { Post, Comment, User } from "@/types";
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { userInfoSelector } from "@/state/userState";
@@ -18,7 +18,7 @@ const TimelinePage = (): JSX.Element => {
   const [timelineData, setTimelineData] = useState<Post[]>([]);
   const [isOpenPostForm, setIsOpenPostForm] = useState<boolean>(false);
   const [postDetail, setPostDetail] = useState<Post | undefined>(undefined);
-  const userInfo = useRecoilValue(userInfoSelector);
+  const userInfo = useRecoilValue<User>(userInfoSelector);
   const toast = useToast();
 
   useEffect(() => {
@@ -281,7 +281,7 @@ const TimelinePage = (): JSX.Element => {
                 <PostBlock
                   post={post}
                   key={post.id}
-									isComment={false}
+                  isComment={false}
                   onDelete={async () => await postDelete(post)}
                   onCreateFavorite={async () => await onCreatedFavorite(post)}
                   onDeleteFavorite={async () => await onDeleteFavorite(post)}

@@ -10,11 +10,11 @@ import {
 } from "@chakra-ui/react";
 import { useState } from "react";
 import Image from "next/image";
-import { Post } from "@/types";
+import { Post, Comment } from "@/types";
 
 type Props = {
   isOpenModal: boolean;
-  editingPost?: Post;
+  editingPost?: Post | Comment;
   onClose: () => void;
   postForm: (content: string) => void;
 };

@@ -79,12 +79,13 @@ const TimelinePage = (): JSX.Element => {
       body: JSON.stringify(params),
     })
       .then(async (r) => {
-        const newPost = await r.json();
+        const newPost: Post = await r.json();
         setTimelineData((prev) =>
           prev.map((post) => (post.id === editingPost?.id ? newPost : post))
         );
+        setPostDetail(newPost);
       })
-      .catch((e) => console.log(e))
+      .catch((e) => console.log(e));
   };
 
   const postDelete = async (post: Post): Promise<void> => {
@@ -304,6 +305,7 @@ const TimelinePage = (): JSX.Element => {
               deleteComment={async (comment: Comment) =>
                 await deleteComment(comment)
               }
+              updatePost={() => openPostModal(postDetail)}
             />
           ) : (
             timelineData.map((post) => {

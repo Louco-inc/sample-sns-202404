@@ -3,7 +3,7 @@ import { Button, Text, useToast } from "@chakra-ui/react";
 import { FcTimeline } from "react-icons/fc";
 import { FaSearch, FaRegBookmark } from "react-icons/fa";
 import { MdNotificationsNone, MdMailOutline } from "react-icons/md";
-import { Post, Comment } from "@/types";
+import { Post, Comment, User } from "@/types";
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { userInfoSelector } from "@/state/userState";
@@ -18,7 +18,8 @@ const TimelinePage = (): JSX.Element => {
   const [timelineData, setTimelineData] = useState<Post[]>([]);
   const [isOpenPostForm, setIsOpenPostForm] = useState<boolean>(false);
   const [postDetail, setPostDetail] = useState<Post | undefined>(undefined);
-  const userInfo = useRecoilValue(userInfoSelector);
+  const [editingPost, setEditingPost] = useState<Post | undefined>(undefined);
+  const userInfo = useRecoilValue<User>(userInfoSelector);
   const toast = useToast();
 
   useEffect(() => {
@@ -31,11 +32,22 @@ const TimelinePage = (): JSX.Element => {
     init();
   }, []);
 
-  const openPostModal = (): void => {
+  const openPostModal = (post?: Post): void => {
+    setEditingPost(post);
     setIsOpenPostForm(true);
   };
 
   const postForm = async (content: string): Promise<void> => {
+    if (editingPost) {
+      await updatePostForm(content);
+    } else {
+      await createPostForm(content);
+    }
+    setEditingPost(undefined);
+    setIsOpenPostForm(false);
+  };
+
+  const createPostForm = async (content: string): Promise<void> => {
     const params = {
       content,
       userId: userInfo.id,
@@ -57,6 +69,25 @@ const TimelinePage = (): JSX.Element => {
       .catch((r) => console.log(r));
   };
 
+  const updatePostForm = async (content: string): Promise<void> => {
+    const params = {
+      content,
+      postId: editingPost?.id,
+    };
+    await fetch(`/api/posts/${editingPost?.id}`, {
+      method: "PATCH",
+      body: JSON.stringify(params),
+    })
+      .then(async (r) => {
+        const newPost: Post = await r.json();
+        setTimelineData((prev) =>
+          prev.map((post) => (post.id === editingPost?.id ? newPost : post))
+        );
+        setPostDetail(newPost);
+      })
+      .catch((e) => console.log(e));
+  };
+
   const postDelete = async (post: Post): Promise<void> => {
     await fetch(`/api/posts/${post.id}`, { method: "DELETE" })
       .then(async () => {
@@ -70,7 +101,7 @@ const TimelinePage = (): JSX.Element => {
       .catch((e) => console.log(e));
   };
 
-  const onCreatedFavorite = async (post: Post): Promise<void> => {
+  const createdFavorite = async (post: Post): Promise<void> => {
     const params = {
       postId: post.id,
       userId: userInfo.id,
@@ -80,13 +111,13 @@ const TimelinePage = (): JSX.Element => {
       body: JSON.stringify(params),
     })
       .then(async (r) => {
-        const createdFavorite = await r.json();
+        const createdFavoriteValue = await r.json();
         setTimelineData((prev) =>
           prev.map((post) => {
-            if (post.id === createdFavorite.postId) {
+            if (post.id === createdFavoriteValue.postId) {
               return {
                 ...post,
-                favorites: [...post.favorites, createdFavorite],
+                favorites: [...post.favorites, createdFavoriteValue],
               };
             } else {
               return post;
@@ -97,7 +128,7 @@ const TimelinePage = (): JSX.Element => {
       .catch((e) => console.log(e));
   };
 
-  const onDeleteFavorite = async (targetPost: Post): Promise<void> => {
+  const deleteFavorite = async (targetPost: Post): Promise<void> => {
     const params = {
       postId: targetPost.id,
       userId: userInfo.id,
@@ -239,7 +270,7 @@ const TimelinePage = (): JSX.Element => {
             <Button
               className="!bg-post-color !text-white mt-8"
               variant="solid"
-              onClick={openPostModal}
+              onClick={() => openPostModal()}
             >
               投稿する
             </Button>
@@ -265,8 +296,8 @@ const TimelinePage = (): JSX.Element => {
             <PostDetail
               post={postDetail}
               onDelete={async () => await postDelete(postDetail)}
-              onCreateFavorite={async () => await onCreatedFavorite(postDetail)}
-              onDeleteFavorite={async () => await onDeleteFavorite(postDetail)}
+              onCreateFavorite={async () => await createdFavorite(postDetail)}
+              onDeleteFavorite={async () => await deleteFavorite(postDetail)}
               goBackTimeline={() => setPostDetail(undefined)}
               createComment={async (value: string) =>
                 await createComment(value)
@@ -274,6 +305,7 @@ const TimelinePage = (): JSX.Element => {
               deleteComment={async (comment: Comment) =>
                 await deleteComment(comment)
               }
+              updatePost={() => openPostModal(postDetail)}
             />
           ) : (
             timelineData.map((post) => {
@@ -281,22 +313,26 @@ const TimelinePage = (): JSX.Element => {
                 <PostBlock
                   post={post}
                   key={post.id}
-									isComment={false}
+                  isComment={false}
                   onDelete={async () => await postDelete(post)}
-                  onCreateFavorite={async () => await onCreatedFavorite(post)}
-                  onDeleteFavorite={async () => await onDeleteFavorite(post)}
+                  onCreateFavorite={async () => await createdFavorite(post)}
+                  onDeleteFavorite={async () => await deleteFavorite(post)}
                   openPostDetail={() => setPostDetail(post)}
+                  updatePost={() => openPostModal(post)}
                 />
               );
             })
           )}
         </div>
       </div>
-      <PostForm
-        isOpenModal={isOpenPostForm}
-        onClose={() => setIsOpenPostForm(false)}
-        postForm={async (content) => await postForm(content)}
-      />
+      {isOpenPostForm && (
+        <PostForm
+          isOpenModal={isOpenPostForm}
+          onClose={() => setIsOpenPostForm(false)}
+          postForm={async (content) => await postForm(content)}
+          editingPost={editingPost}
+        />
+      )}
     </div>
   );
 };

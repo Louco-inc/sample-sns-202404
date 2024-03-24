@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import { userInfoSelector } from "@/state/userState";
 import { useRecoilValue } from "recoil";
+import PostForm from "@/components/PostForm";
 
 type Props = {
   post: Post;
@@ -15,6 +16,7 @@ type Props = {
   goBackTimeline: () => void;
   createComment: (value: string) => void;
   deleteComment: (comment: Comment) => void;
+  updatePost: () => void;
 };
 
 const PostDetail = (props: Props): JSX.Element => {
@@ -26,12 +28,18 @@ const PostDetail = (props: Props): JSX.Element => {
     goBackTimeline,
     createComment,
     deleteComment,
+    updatePost,
   } = props;
   const [contentValue, setContentValue] = useState<string>("");
   const [comments, setComments] = useState<Comment[]>([]);
   const [isLoaded, setIsLoaded] = useState<boolean>(false);
+  const [isOpenCommentForm, setIsOpenCommentForm] = useState<boolean>(false);
+  const [editingComment, setEditingComment] = useState<Comment | undefined>(
+    undefined
+  );
   const userInfo = useRecoilValue(userInfoSelector);
 
+  // コメントの更新
   useEffect(() => {
     if (isLoaded) {
       if (comments < post.comments) {
@@ -122,6 +130,35 @@ const PostDetail = (props: Props): JSX.Element => {
     createComment(contentValue);
   };
 
+  const updateComment = async (content: string): Promise<void> => {
+    if (!editingComment) return;
+    const params = {
+      content,
+    };
+    await fetch(`/api/comments/${editingComment.id}`, {
+      method: "PATCH",
+      body: JSON.stringify(params),
+    })
+      .then(async (r) => {
+        const updatedComment = await r.json();
+        setComments((prev) =>
+          prev.map((comment) =>
+            comment.id === editingComment.id ? updatedComment : comment
+          )
+        );
+      })
+      .catch((e) => console.log(e))
+      .finally(() => {
+        setIsOpenCommentForm(false);
+        setEditingComment(undefined);
+      });
+  };
+
+  const openCommentForm = (comment: Comment): void => {
+    setEditingComment(comment);
+    setIsOpenCommentForm(true);
+  };
+
   return (
     <div>
       <div>
@@ -137,9 +174,10 @@ const PostDetail = (props: Props): JSX.Element => {
         post={post}
         key={post.id}
         isComment={false}
-        onDelete={async () => onDelete(post)}
-        onCreateFavorite={async () => onCreateFavorite(post)}
-        onDeleteFavorite={async () => onDeleteFavorite(post)}
+        onDelete={async () => onDelete()}
+        onCreateFavorite={async () => onCreateFavorite()}
+        onDeleteFavorite={async () => onDeleteFavorite()}
+        updatePost={updatePost}
       />
       <div className="flex mt-8 bg-white m-4 p-4 rounded-2xl">
         <div className="mr-2">
@@ -179,10 +217,19 @@ const PostDetail = (props: Props): JSX.Element => {
               onDeleteFavorite={async () =>
                 await deleteCommentFavorite(comment)
               }
+              updatePost={() => openCommentForm(comment)}
             />
           );
         })}
       </div>
+      {isOpenCommentForm && (
+        <PostForm
+          isOpenModal={isOpenCommentForm}
+          onClose={() => setIsOpenCommentForm(false)}
+          postForm={async (content: string) => await updateComment(content)}
+          editingPost={editingComment}
+        />
+      )}
     </div>
   );
 };

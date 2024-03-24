@@ -22,7 +22,7 @@ export default function LoginPage(): JSX.Element {
   const [password, setPassword] = useState<string>("");
   const [isError, setIsError] = useState<boolean>(false);
   const [alertProps, setAlertProps] = useState<AlertType>(alertDefaultValue);
-  const setUserInfo = useSetRecoilState(userInfoSelector);
+  const setUserInfo = useSetRecoilState<User>(userInfoSelector);
   const router = useRouter();
 
   useEffect(() => {

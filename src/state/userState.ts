@@ -1,8 +1,8 @@
 import { User } from "@/types";
-import { RecoilState, atom, selector } from "recoil";
+import { RecoilState, RecoilValue, atom, selector } from "recoil";
 
-const defaultUserValue: User = {
-  id: "-100",
+const defaultValue: User = {
+  id: -100,
   createdAt: new Date(),
   updatedAt: new Date(),
   nickname: "",
@@ -11,20 +11,25 @@ const defaultUserValue: User = {
   uuid: "",
 };
 
-export const userInfoState: RecoilState<User> = atom({
-  key: "userState",
-  default: defaultUserValue,
+const userInfoState: RecoilState<User> = atom<User>({
+  key: "userStateValue",
+  default: defaultValue,
 });
 
-export const userInfoSelector = selector({
-  key: "userSelector",
-  get: (): User => {
+export const userInfoSelector = selector<User>({
+  key: "userStateSelector",
+  get: ({ get }) => {
     const userInfoData = sessionStorage.getItem("sample-sns-app-user-info");
-    if (!userInfoData) return defaultUserValue;
-    const parsedUserInfo: User = JSON.parse(userInfoData);
-    return parsedUserInfo;
+    const userInfoValue = get(userInfoState);
+    if (userInfoData && userInfoValue) {
+      const parsedUserInfo: RecoilValue<User> = JSON.parse(userInfoData);
+      return parsedUserInfo;
+    } else {
+      return defaultValue;
+    }
   },
-  set: (_, newVal) => {
+  set: ({ set }, newVal) => {
     sessionStorage.setItem("sample-sns-app-user-info", JSON.stringify(newVal));
+    set(userInfoState, newVal ?? defaultValue);
   },
 });

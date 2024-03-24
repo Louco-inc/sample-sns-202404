@@ -35,6 +35,7 @@ type Props = {
   onCreateFavorite: () => void;
   onDeleteFavorite: () => void;
   openPostDetail?: () => void;
+  updatePost: () => void;
 };
 
 const PostBlock = (props: Props): JSX.Element => {
@@ -45,6 +46,7 @@ const PostBlock = (props: Props): JSX.Element => {
     onCreateFavorite,
     onDeleteFavorite,
     openPostDetail,
+    updatePost,
   } = props;
   const [isOpenPostMenu, setIsOpenPostMenu] = useState<boolean>(false);
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -103,6 +105,7 @@ const PostBlock = (props: Props): JSX.Element => {
                 isOpenMenu={isOpenPostMenu}
                 onClose={() => setIsOpenPostMenu(false)}
                 onDelete={onOpen}
+                onUpdate={updatePost}
               />
             </div>
           </div>

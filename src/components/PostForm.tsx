@@ -8,25 +8,23 @@ import {
   Button,
   Textarea,
 } from "@chakra-ui/react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
+import { Post } from "@/types";
 
 type Props = {
   isOpenModal: boolean;
-  content?: string;
+  editingPost?: Post;
   onClose: () => void;
   postForm: (content: string) => void;
 };
 
 const PostForm = (props: Props): JSX.Element => {
-  const { isOpenModal, content, onClose, postForm } = props;
-  const [contentValue, setContentValue] = useState<string>(content ?? "");
-
-  useEffect(() => {
-    if (!isOpenModal) {
-      setContentValue("");
-    }
-  }, [isOpenModal]);
+  const { isOpenModal, editingPost, onClose, postForm } = props;
+  const [contentValue, setContentValue] = useState<string>(
+    editingPost?.content ?? ""
+  );
+  const isEdit = Boolean(editingPost);
 
   const postFormContent = (): void => {
     if (!contentValue) {
@@ -67,7 +65,7 @@ const PostForm = (props: Props): JSX.Element => {
               variant="solid"
               onClick={postFormContent}
             >
-              投稿する
+              {`${isEdit ? "更新" : "投稿"}する`}
             </Button>
           </ModalFooter>
         </ModalContent>

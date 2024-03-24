@@ -18,6 +18,7 @@ const TimelinePage = (): JSX.Element => {
   const [timelineData, setTimelineData] = useState<Post[]>([]);
   const [isOpenPostForm, setIsOpenPostForm] = useState<boolean>(false);
   const [postDetail, setPostDetail] = useState<Post | undefined>(undefined);
+  const [editingPost, setEditingPost] = useState<Post | undefined>(undefined);
   const userInfo = useRecoilValue<User>(userInfoSelector);
   const toast = useToast();
 
@@ -31,11 +32,22 @@ const TimelinePage = (): JSX.Element => {
     init();
   }, []);
 
-  const openPostModal = (): void => {
+  const openPostModal = (post?: Post): void => {
+    setEditingPost(post);
     setIsOpenPostForm(true);
   };
 
   const postForm = async (content: string): Promise<void> => {
+    if (editingPost) {
+      await updatePostForm(content);
+    } else {
+      await createPostForm(content);
+    }
+    setEditingPost(undefined);
+    setIsOpenPostForm(false);
+  };
+
+  const createPostForm = async (content: string): Promise<void> => {
     const params = {
       content,
       userId: userInfo.id,
@@ -55,6 +67,24 @@ const TimelinePage = (): JSX.Element => {
         });
       })
       .catch((r) => console.log(r));
+  };
+
+  const updatePostForm = async (content: string): Promise<void> => {
+    const params = {
+      content,
+      postId: editingPost?.id,
+    };
+    await fetch(`/api/posts/${editingPost?.id}`, {
+      method: "PATCH",
+      body: JSON.stringify(params),
+    })
+      .then(async (r) => {
+        const newPost = await r.json();
+        setTimelineData((prev) =>
+          prev.map((post) => (post.id === editingPost?.id ? newPost : post))
+        );
+      })
+      .catch((e) => console.log(e))
   };
 
   const postDelete = async (post: Post): Promise<void> => {
@@ -239,7 +269,7 @@ const TimelinePage = (): JSX.Element => {
             <Button
               className="!bg-post-color !text-white mt-8"
               variant="solid"
-              onClick={openPostModal}
+              onClick={() => openPostModal()}
             >
               投稿する
             </Button>
@@ -286,17 +316,21 @@ const TimelinePage = (): JSX.Element => {
                   onCreateFavorite={async () => await createdFavorite(post)}
                   onDeleteFavorite={async () => await deleteFavorite(post)}
                   openPostDetail={() => setPostDetail(post)}
+                  updatePost={() => openPostModal(post)}
                 />
               );
             })
           )}
         </div>
       </div>
-      <PostForm
-        isOpenModal={isOpenPostForm}
-        onClose={() => setIsOpenPostForm(false)}
-        postForm={async (content) => await postForm(content)}
-      />
+      {isOpenPostForm && (
+        <PostForm
+          isOpenModal={isOpenPostForm}
+          onClose={() => setIsOpenPostForm(false)}
+          postForm={async (content) => await postForm(content)}
+          editingPost={editingPost}
+        />
+      )}
     </div>
   );
 };

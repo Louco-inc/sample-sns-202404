@@ -59,14 +59,14 @@ const TimelinePage = (): JSX.Element => {
       .then(async (r) => {
         const res: Post = await r.json();
         setTimelineData((prev) => [res, ...prev]);
-        setIsOpenPostForm(false);
         toast({
           title: "投稿を作成しました",
           status: "success",
           duration: 3000,
         });
       })
-      .catch((r) => console.log(r));
+      .catch((r) => console.log(r))
+      .finally(() => setIsOpenPostForm(false));
   };
 
   const updatePostForm = async (content: string): Promise<void> => {
@@ -83,7 +83,10 @@ const TimelinePage = (): JSX.Element => {
         setTimelineData((prev) =>
           prev.map((post) => (post.id === editingPost?.id ? newPost : post))
         );
-        setPostDetail(newPost);
+        // 詳細画面からの編集であれば対象の投稿を更新
+        if (postDetail) {
+          setPostDetail(newPost);
+        }
       })
       .catch((e) => console.log(e));
   };
